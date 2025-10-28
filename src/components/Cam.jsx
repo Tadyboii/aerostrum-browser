@@ -37,7 +37,7 @@ export default function StrumHand() {
     });
 
     // === Load chord sounds ===
-    const chordFolder = "/chords"; // place chords folder inside public/
+    const chordFolder = "chords"; // place chords folder inside public/
     let currentChord = null;
     let currentMode = null;
     const numStrings = 6;
