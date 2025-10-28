@@ -48,8 +48,8 @@ export default function StrumHand() {
     async function loadChordSounds(chordName, mode = "acoustic") {
       stringSounds = [];
       for (let i = 0; i < numStrings; i++) {
-        const path = `aerostrum-browser/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
-        // const path = `/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
+        // const path = `aerostrum-browser/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
+        const path = `/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
         stringSounds.push(new Audio(path));
       }
       currentChord = chordName;
