@@ -37,7 +37,7 @@ export default function StrumHand() {
     });
 
     // === Load chord sounds ===
-    const chordFolder = "chords"; // place chords folder inside public/
+    const chordFolder = "/chords"; // place chords folder inside public/
     let currentChord = null;
     let currentMode = null;
     const numStrings = 6;
@@ -48,7 +48,7 @@ export default function StrumHand() {
     async function loadChordSounds(chordName, mode = "acoustic") {
       stringSounds = [];
       for (let i = 0; i < numStrings; i++) {
-        const path = `${process.env.PUBLIC_URL}/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
+        const path = `${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
         stringSounds.push(new Audio(path));
       }
       currentChord = chordName;
