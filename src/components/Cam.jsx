@@ -133,10 +133,8 @@ export default function StrumHand() {
           stringColors[i] = [200, 200, 200];
         }
         const [r, g, b] = stringColors[i];
-        // Adjust string thickness (low E = thickest, high e = thinnest)
-        const stringThickness = 6 - i; // i = 0 → thickest, i = 5 → thinnest
+        const stringThickness = 6 - i;
 
-        // Draw black outline (slightly thicker)
         ctx.lineWidth = stringThickness + 2;
         ctx.strokeStyle = "black";
         ctx.beginPath();
@@ -144,7 +142,6 @@ export default function StrumHand() {
         ctx.lineTo(endX, y);
         ctx.stroke();
 
-        // Draw colored string line (actual string)
         ctx.lineWidth = stringThickness;
         ctx.strokeStyle = `rgb(${r},${g},${b})`;
         ctx.beginPath();
@@ -155,10 +152,9 @@ export default function StrumHand() {
         ctx.font = "16px Arial Black";
         ctx.lineWidth = 3;
         ctx.strokeStyle = "black";
-        ctx.strokeText(stringLabels[i], startX - 20, y + 5); // black outline
-
+        ctx.strokeText(stringLabels[i], startX - 20, y + 5);
         ctx.fillStyle = "white";
-        ctx.fillText(stringLabels[i], startX - 20, y + 5); // white fill
+        ctx.fillText(stringLabels[i], startX - 20, y + 5);
       }
 
       const stringTopY = startY;
@@ -172,23 +168,15 @@ export default function StrumHand() {
         const wristX = (1 - wrist.x) * canvas.width;
         const wristY = wrist.y * canvas.height;
 
-        // === Draw pick image ===
         if (pickImage.complete) {
           const pickSize = 50;
           ctx.save();
           ctx.translate(wristX, wristY);
           ctx.rotate(Math.PI / 8);
-          ctx.drawImage(
-            pickImage,
-            -pickSize / 2,
-            -pickSize / 2,
-            pickSize,
-            pickSize
-          );
+          ctx.drawImage(pickImage, -pickSize / 2, -pickSize / 2, pickSize, pickSize);
           ctx.restore();
         }
 
-        // === Strumming detection ===
         if (
           wristX >= stringLeftX &&
           wristX <= stringRightX &&
@@ -218,20 +206,18 @@ export default function StrumHand() {
         }
         prevStrumY = wristY;
       }
-      
-      // === Hand bounding box + gesture ===
+
+      // === Hand detection + gesture box ===
       if (handResults?.multiHandLandmarks) {
         handResults.multiHandLandmarks.forEach((hand) => {
-          // === Compute bounding box ===
-          const xs = hand.map((lm) => (1 - lm.x) * canvas.width);
+          const xs = hand.map((lm) => lm.x * canvas.width / 2);
           const ys = hand.map((lm) => lm.y * canvas.height);
           let minX = Math.min(...xs);
           let maxX = Math.max(...xs);
           let minY = Math.min(...ys);
           let maxY = Math.max(...ys);
 
-          // === Add padding around hand ===
-          const padding = 20; // increase this number to make box larger
+          const padding = 20;
           minX -= padding;
           minY -= padding;
           maxX += padding;
@@ -240,8 +226,6 @@ export default function StrumHand() {
           const boxWidth = maxX - minX;
           const boxHeight = maxY - minY;
 
-
-          // === Detect chord gesture ===
           const [gestureChord, gestureMode] = detectHandGesture(hand);
           if (
             gestureChord &&
@@ -251,13 +235,11 @@ export default function StrumHand() {
             loadChordSounds(gestureChord, gestureMode);
           }
 
-          
           if (gestureChord && gestureMode) {
-            // === Color themes ===
             const colorThemes = {
               distorted: {
                 bright: "#ff3333",
-                medium: "#cc1a1a", // <-- medium red (between bright & dark)
+                medium: "#cc1a1a",
                 dark: "#b30000",
               },
               acoustic: {
@@ -266,8 +248,7 @@ export default function StrumHand() {
                 dark: "#009933",
               },
             };
-            const theme = colorThemes[gestureMode] || colorThemes.acoustic;
-            // === Map chord to Roman numeral ===
+            const theme = colorThemes[gestureMode];
             const romanMap = {
               C: "I",
               Dm: "II",
@@ -279,54 +260,28 @@ export default function StrumHand() {
             };
             const romanNumeral = romanMap[gestureChord] || "";
 
-            // Draw outer black outline
             ctx.lineWidth = 4;
             ctx.strokeStyle = "black";
             ctx.strokeRect(minX - 1, minY - 1, boxWidth + 2, boxHeight + 2);
 
-            // Draw inner medium red border
             ctx.lineWidth = 2;
             ctx.strokeStyle = theme.medium;
             ctx.strokeRect(minX, minY, boxWidth, boxHeight);
-          
-            // === Draw chord name (bright red with black outline) ===
+
             ctx.textAlign = "center";
             ctx.font = "28px Arial Black";
             ctx.lineWidth = 3;
             ctx.strokeStyle = "black";
             ctx.fillStyle = theme.bright;
-            ctx.strokeText(
-              gestureChord,
-              minX + boxWidth / 2,
-              minY - 35
-            );
-            ctx.fillText(
-              gestureChord,
-              minX + boxWidth / 2,
-              minY - 35
-            );
-          
-            // === Draw Roman numeral (darker red with black outline) ===
+            ctx.strokeText(gestureChord, minX + boxWidth / 2, minY - 35);
+            ctx.fillText(gestureChord, minX + boxWidth / 2, minY - 35);
+
             ctx.font = "22px Arial Black";
             ctx.lineWidth = 2;
             ctx.strokeStyle = "black";
             ctx.fillStyle = theme.dark;
-            ctx.strokeText(
-              romanNumeral,
-              minX + boxWidth / 2,
-              minY - 10
-            );
-            ctx.fillText(
-              romanNumeral,
-              minX + boxWidth / 2,
-              minY - 10
-            );
-          
-            // === Draw mode at top-left (acoustic / distorted) ===
-            // ctx.textAlign = "left";
-            // ctx.fillStyle = "white";
-            // ctx.font = "18px Arial";
-            // ctx.fillText(`(${gestureMode})`, 10, 30);
+            ctx.strokeText(romanNumeral, minX + boxWidth / 2, minY - 10);
+            ctx.fillText(romanNumeral, minX + boxWidth / 2, minY - 10);
           }
         });
       }
@@ -334,25 +289,56 @@ export default function StrumHand() {
       frameCount++;
     };
 
-    // === Set up callbacks ===
+    // === Results callbacks ===
     pose.onResults((res) => {
       latestPoseResults = res;
       drawCombined(latestPoseResults, latestHandResults);
     });
+
     hands.onResults((res) => {
       latestHandResults = res;
       drawCombined(latestPoseResults, latestHandResults);
     });
 
-    // === Camera ===
+    // === Camera with mirrored left-half detection ===
     const camera = new Camera(video, {
       onFrame: async () => {
         await pose.send({ image: video });
-        await hands.send({ image: video });
+
+        // Crop *visible left half* for hands
+        const offscreen = document.createElement("canvas");
+        const ctxOff = offscreen.getContext("2d");
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        const halfW = w / 2;
+        offscreen.width = halfW;
+        offscreen.height = h;
+
+        // Flip horizontally so it's consistent with the mirrored display
+        ctxOff.save();
+        ctxOff.scale(-1, 1);
+        ctxOff.drawImage(
+          video,
+          -w, // shift full width because of flipped canvas
+          0,
+          w,
+          h
+        );
+        ctxOff.restore();
+
+        // Crop the left half (after flip)
+        const cropped = document.createElement("canvas");
+        cropped.width = halfW;
+        cropped.height = h;
+        const cctx = cropped.getContext("2d");
+        cctx.drawImage(offscreen, 0, 0, halfW, h, 0, 0, halfW, h);
+
+        await hands.send({ image: cropped });
       },
       width: 640,
       height: 480,
     });
+
     camera.start();
 
     return () => camera.stop();
@@ -367,8 +353,8 @@ export default function StrumHand() {
         height={480}
         style={{
           border: "2px solid black",
-          width: "50vw",   // fixed proportion of screen width
-          height: "37.5vw", // keep 4:3 ratio (480/640 = 0.75)
+          width: "50vw",
+          height: "37.5vw",
         }}
       />
     </div>
