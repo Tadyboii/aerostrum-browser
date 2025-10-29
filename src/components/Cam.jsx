@@ -10,7 +10,8 @@ export default function StrumHand() {
   // === Preload pick image ===
   const pickImage = new Image();
   pickImage.src = "/aerostrum-browser/images/pick.webp";
-
+  const guitarImage = new Image();
+  guitarImage.src = "/aerostrum-browser/images/guitar3.png";
   useEffect(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -57,6 +58,7 @@ export default function StrumHand() {
       currentChord = chordName;
       currentMode = mode;
     }
+    loadChordSounds("C", "acoustic");
 
     // === Detect chord gesture ===
     function detectHandGesture(handLandmarks) {
@@ -65,7 +67,7 @@ export default function StrumHand() {
       const thumbMcp = handLandmarks[2];
       const tips = [8, 12, 16, 20];
       const pips = [6, 10, 14, 18];
-      const thumbOpen = thumbTip.x > thumbIp.x && thumbIp.x > thumbMcp.x;
+      const thumbOpen = thumbTip.x < thumbIp.x && thumbIp.x < thumbMcp.x;
       const yTips = tips.map((i) => handLandmarks[i].y);
       const yPips = pips.map((i) => handLandmarks[i].y);
       const fingersUp = yTips.map((y, i) => y < yPips[i]);
@@ -98,7 +100,7 @@ export default function StrumHand() {
     // === State ===
     let latestPoseResults = null;
     let latestHandResults = null;
-    const spacing = 20;
+    const baseSpacing = 25;
     const stringLabels = ["E", "A", "D", "G", "B", "E"];
     const stringColors = Array(numStrings).fill([200, 200, 200]);
     const stringHitTime = Array(numStrings).fill(0);
@@ -123,12 +125,87 @@ export default function StrumHand() {
       // Draw strings
       const offsetX = 80;
       const offsetY = 80;
-      const startX = canvas.width / 2 - 100 + offsetX;
-      const endX = canvas.width / 2 + 100 + offsetX;
-      const startY = canvas.height / 2 - (numStrings / 2) * spacing + offsetY;
+
+      // Default static position
+      let startX = canvas.width / 2 - 100 + offsetX;
+      let endX = canvas.width / 2 + 100 + offsetX;
+      let startY = canvas.height / 2 - (numStrings / 2) * baseSpacing + offsetY;
+      let spacingScaled = baseSpacing;
+
+      if (handResults?.multiHandLandmarks?.length > 0) {
+        const hand = handResults.multiHandLandmarks[0];
+
+        const xs = hand.map((lm) => lm.x * canvas.width / 2);
+        const ys = hand.map((lm) => lm.y * canvas.height);
+
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+
+        // === Scale based on hand height ===
+        const handHeight = maxY - minY;
+        const minHandHeight = 50;
+        const maxHandHeight = 300;
+        let scale = (handHeight - minHandHeight) / (maxHandHeight - minHandHeight);
+        scale = Math.max(0.21, Math.min(3.0, scale));
+
+        // Apply scale
+        const baseWidth = 1550;
+        const width = baseWidth * scale;
+        spacingScaled = baseSpacing * scale;
+        const horizontalOffset = 200 * scale; // distance from hand to string
+
+        // Position strings relative to hand
+        startX = centerX + horizontalOffset;
+        endX = startX + width;
+        startY = centerY - (numStrings / 2) * spacingScaled;
+
+        if (guitarImage.complete) {
+          // Preserve original aspect ratio
+          const originalWidth = guitarImage.width;
+          const originalHeight = guitarImage.height;
+          const aspectRatio = originalWidth / originalHeight;
+        
+          // Scale based on hand height
+          const handHeight = maxY - minY;
+          const minHandHeight = 50;
+          const maxHandHeight = 300;
+          let scale = (handHeight - minHandHeight) / (maxHandHeight - minHandHeight);
+          scale = Math.max(0.21, Math.min(3.0, scale));
+        
+          // Guitar dimensions
+          const baseGuitarHeight = 1700; // base height
+          const guitarHeight = baseGuitarHeight * scale;
+          const guitarWidth = guitarHeight * aspectRatio;
+        
+          // Offset guitar to the right of hand
+          const guitarOffsetX = 750 * scale;
+        
+          const centerX = (minX + maxX) / 2;
+          const centerY = (minY + maxY) / 2;
+          const guitarX = centerX - guitarWidth / 2 + guitarOffsetX;
+          const guitarY = centerY - guitarHeight / 2;
+        
+          // Draw guitar (flipped horizontally)
+          ctx.save();
+          ctx.translate(guitarX + guitarWidth / 2, 0); // pivot for flip
+          ctx.scale(-1, 1);
+          ctx.drawImage(guitarImage, -guitarWidth / 2, guitarY, guitarWidth, guitarHeight);
+          ctx.restore();
+        }
+      } else {
+          // Strings are off-screen by default
+          startX = -1000;
+          endX = -1000;
+          startY = -1000;
+      }
 
       for (let i = 0; i < numStrings; i++) {
-        const y = startY + i * spacing;
+        const y = startY + i * spacingScaled;
         if (frameCount - stringHitTime[i] > colorDuration) {
           stringColors[i] = [200, 200, 200];
         }
@@ -149,18 +226,13 @@ export default function StrumHand() {
         ctx.lineTo(endX, y);
         ctx.stroke();
 
-        ctx.font = "16px Arial Black";
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "black";
-        ctx.strokeText(stringLabels[i], startX - 20, y + 5);
-        ctx.fillStyle = "white";
-        ctx.fillText(stringLabels[i], startX - 20, y + 5);
+        // ctx.font = "16px Arial Black";
+        // ctx.lineWidth = 3;
+        // ctx.strokeStyle = "black";
+        // ctx.strokeText(stringLabels[i], startX - 20, y + 5);
+        // ctx.fillStyle = "white";
+        // ctx.fillText(stringLabels[i], startX - 20, y + 5);
       }
-
-      const stringTopY = startY;
-      const stringBottomY = startY + (numStrings - 1) * spacing;
-      const stringLeftX = startX;
-      const stringRightX = endX;
 
       // === Pose right wrist ===
       if (poseResults?.poseLandmarks) {
@@ -168,6 +240,7 @@ export default function StrumHand() {
         const wristX = (1 - wrist.x) * canvas.width;
         const wristY = wrist.y * canvas.height;
 
+        // Draw pick image
         if (pickImage.complete) {
           const pickSize = 50;
           ctx.save();
@@ -177,33 +250,40 @@ export default function StrumHand() {
           ctx.restore();
         }
 
-        if (
-          wristX >= stringLeftX &&
-          wristX <= stringRightX &&
-          wristY >= stringTopY &&
-          wristY <= stringBottomY
-        ) {
+        // Strumming detection: check all strings between prevStrumY and current wristY
+        const stringLeftX = startX;
+        const stringRightX = endX;
+
+        // Only trigger if wrist is over the string area horizontally
+        if (wristX >= stringLeftX && wristX <= stringRightX) {
           for (let i = 0; i < numStrings; i++) {
-            const y = startY + i * spacing;
+            const y = startY + i * spacingScaled;
+            // Check if the string is between previous and current wrist positions
             if (
-              (prevStrumY < y && wristY >= y) ||
-              (prevStrumY > y && wristY <= y)
+              (prevStrumY !== null &&
+                ((prevStrumY <= y && wristY >= y) || (prevStrumY >= y && wristY <= y))) ||
+              (prevStrumY === null && wristY >= y && wristY <= y)
             ) {
+              // Trigger string
               stringColors[i] =
                 currentMode === "distorted" ? [255, 0, 0] : [0, 165, 255];
               stringHitTime[i] = frameCount;
 
+              // Stop previous audio if still playing
               if (activeAudio[i]) {
                 activeAudio[i].pause();
                 activeAudio[i].currentTime = 0;
               }
 
+              // Play string audio
               activeAudio[i] = stringSounds[i];
               activeAudio[i].currentTime = 0;
               activeAudio[i].play();
             }
           }
         }
+
+        // Update previous wrist Y
         prevStrumY = wristY;
       }
 
@@ -305,7 +385,6 @@ export default function StrumHand() {
       onFrame: async () => {
         await pose.send({ image: video });
 
-        // Crop *visible left half* for hands
         const offscreen = document.createElement("canvas");
         const ctxOff = offscreen.getContext("2d");
         const w = video.videoWidth;
@@ -314,19 +393,11 @@ export default function StrumHand() {
         offscreen.width = halfW;
         offscreen.height = h;
 
-        // Flip horizontally so it's consistent with the mirrored display
         ctxOff.save();
         ctxOff.scale(-1, 1);
-        ctxOff.drawImage(
-          video,
-          -w, // shift full width because of flipped canvas
-          0,
-          w,
-          h
-        );
+        ctxOff.drawImage(video, -w, 0, w, h);
         ctxOff.restore();
 
-        // Crop the left half (after flip)
         const cropped = document.createElement("canvas");
         cropped.width = halfW;
         cropped.height = h;
