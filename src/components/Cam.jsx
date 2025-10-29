@@ -8,7 +8,7 @@ export default function StrumHand() {
   const canvasRef = useRef(null);
 
   const pickImage = new Image();
-  pickImage.src = "aerostrum-browser/images/pick.webp"; 
+  pickImage.src = "/aerostrum-browser/images/pick.webp"; 
 
   useEffect(() => {
     const video = videoRef.current;
