@@ -7,6 +7,9 @@ export default function StrumHand() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
+  const pickImage = new Image();
+  pickImage.src = "aerostrum-browser/images/pick.webp"; 
+
   useEffect(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -48,7 +51,7 @@ export default function StrumHand() {
     async function loadChordSounds(chordName, mode = "acoustic") {
       stringSounds = [];
       for (let i = 0; i < numStrings; i++) {
-        // const path = `aerostrum-browser/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
+        // const path = `/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
         const path = `/aerostrum-browser/${chordFolder}/${mode}/${chordName}/string${i + 1}.wav`;
         stringSounds.push(new Audio(path));
       }
@@ -151,10 +154,25 @@ export default function StrumHand() {
         const wrist = poseResults.poseLandmarks[20];
         const wristX = (1 - wrist.x) * canvas.width;
         const wristY = wrist.y * canvas.height;
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.arc(wristX, wristY, 10, 0, 2 * Math.PI);
-        ctx.fill();
+        // ctx.fillStyle = "red";
+        // ctx.beginPath();
+        // ctx.arc(wristX, wristY, 10, 0, 2 * Math.PI);
+        // ctx.fill();
+
+        if (pickImage) {
+          const pickSize = 50;
+          ctx.save();
+          ctx.translate(wristX, wristY);
+          ctx.rotate(Math.PI / 8); // slight tilt for realism
+          ctx.drawImage(
+            pickImage,
+            -pickSize / 2,
+            -pickSize / 2,
+            pickSize,
+            pickSize
+          );
+          ctx.restore();
+        }
 
         if (
           wristX >= stringLeftX &&
