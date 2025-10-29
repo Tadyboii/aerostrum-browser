@@ -32,6 +32,13 @@ body {
   min-height: 100vh;         /* full viewport height */
   text-align: center;        /* center text inside elements */
   gap: 2rem;                 /* optional spacing between elements */
+
+  /* 🎸 ADD THESE LINES BELOW */
+  background-image: url("/aerostrum-browser/images/stage.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;  /* optional: makes it stay still when scrolling */
 }
 
 h1 {
