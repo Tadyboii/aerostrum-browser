@@ -177,7 +177,7 @@ export default function StrumHand() {
         const minHandHeight = 50;
         const maxHandHeight = 300;
         let scale = (handHeight - minHandHeight) / (maxHandHeight - minHandHeight);
-        scale = Math.max(0.21, Math.min(3.0, scale));
+        scale = Math.max(0.17, Math.min(3.0, scale));
 
         // Apply scale
         const baseWidth = 1550;
@@ -201,7 +201,7 @@ export default function StrumHand() {
           const minHandHeight = 50;
           const maxHandHeight = 300;
           let scale = (handHeight - minHandHeight) / (maxHandHeight - minHandHeight);
-          scale = Math.max(0.21, Math.min(3.0, scale));
+          scale = Math.max(0.17, Math.min(3.0, scale));
         
           // Guitar dimensions
           const baseGuitarHeight = 1700; // base height
