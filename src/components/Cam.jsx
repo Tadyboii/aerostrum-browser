@@ -42,7 +42,7 @@ export default function StrumHand() {
     });
 
     // === Load chord sounds ===
-    const chordFolder = "chords";
+    const chordFolder = "chords_transposed";
     let currentChord = null;
     let currentMode = null;
     const numStrings = 6;
@@ -72,6 +72,32 @@ export default function StrumHand() {
       const yPips = pips.map((i) => handLandmarks[i].y);
       const fingersUp = yTips.map((y, i) => y < yPips[i]);
       const pattern = [thumbOpen, ...fingersUp];
+
+      // function detectHandGesture(handLandmarks) {
+      //   const thumbTip = handLandmarks[4];
+      //   const thumbIp = handLandmarks[3];
+      //   const thumbMcp = handLandmarks[2];
+      //   const tips = [8, 12, 16, 20];
+      //   const pips = [6, 10, 14, 18];
+      //   const wrist = handLandmarks[0];
+      //   const middleMcp = handLandmarks[9];
+        
+      //   // Use palm width as scale reference
+      //   const palmWidth = Math.sqrt(
+      //     Math.pow(handLandmarks[5].x - handLandmarks[17].x, 2) +
+      //     Math.pow(handLandmarks[5].y - handLandmarks[17].y, 2)
+      //   );
+        
+      //   const threshold = palmWidth * 0.08; // 8% of palm width
+        
+      //   const thumbOpen = thumbTip.x < thumbIp.x && thumbIp.x < thumbMcp.x;
+      //   const yTips = tips.map((i) => handLandmarks[i].y);
+      //   const yPips = pips.map((i) => handLandmarks[i].y);
+        
+      //   const fingersUp = yTips.map((y, i) => y < yPips[i] - threshold);
+      //   const pattern = [thumbOpen, ...fingersUp];
+        
+      //   // ... rest of your pattern matching code
 
       const acousticPatterns = {
         "false,true,false,false,false": ["C", "acoustic"],
